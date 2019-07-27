@@ -20,13 +20,21 @@ module InstDecode (
     output reg          rd_ready,   // 写入寄存器数据是否已经准备好。若是，数据为 rd_data，否则为 ALU 计算结果。
     output reg [31:0]   rd_data,    // 写入寄存器数据
 
+    output reg          cp0_wenable,// 写 CP0 使能
+    output reg [7:0]    cp0_widx,   // 写 CP0 编号
+    output reg [31:0]   cp0_wdata,  // 写 CP0 数据
+
     output reg          invalid,    // 非法指令异常
 
-                                    // 接到寄存器堆
+    // 接到寄存器堆
     output wire[4:0]    rs_idx,     // 读寄存器编号 rs
     input  wire[31:0]   rs_data,    // rs 寄存器的值，立即读出
     output wire[4:0]    rt_idx,     // 读寄存器编号 rt
-    input  wire[31:0]   rt_data     // rt 寄存器的值，立即读出
+    input  wire[31:0]   rt_data,    // rt 寄存器的值，立即读出
+
+    // 接到 CP0
+    output wire[7:0]    cp0_ridx,   // 读 CP0 编号
+    input  wire[31:0]   cp0_rdata   // CP0 寄存器的值，立即读出
 );
 
 // 指令解码
@@ -36,6 +44,7 @@ wire[4:0] rt = inst[20:16];     // R, I
 wire[4:0] rd = inst[15:11];     // R
 wire[4:0] sa = inst[10:6];      // R
 wire[5:0] func = inst[5:0];     // R
+wire[5:0] sel = inst[2:0];      // R
 wire[15:0] imme = inst[15:0];   // I
 wire[25:0] addr = inst[25:0];   // J
 wire[31:0] imme_s = {{16{imme[15]}}, imme}; // sign extension
@@ -43,6 +52,7 @@ wire[31:0] imme_s = {{16{imme[15]}}, imme}; // sign extension
 // 直接输出
 assign rs_idx = rs;
 assign rt_idx = rt;
+assign cp0_ridx = rt;
 wire is_load  = op[5:3] == 3'b100;
 wire is_store = op[5:3] == 3'b101;
 
@@ -57,6 +67,9 @@ always @ (*) begin
     rd_idx <= 0;
     rd_data <= 0;
     rd_ready <= 0;
+    cp0_wenable <= 0;
+    cp0_widx <= 0;
+    cp0_wdata <= 0;
     invalid <= 0;
 
     case (op[5:3])
@@ -137,6 +150,22 @@ always @ (*) begin
                 default:    invalid <= 1;
             endcase
         end
+
+        // CP0
+        3'b010: if (op == `OP_COP0) begin
+            if (rs == 5'b00000) begin  
+                // MFC0
+                rd_idx <= rd;
+                rd_data <= cp0_rdata;
+                rd_ready <= 1;
+            end else if (rs == 5'b00100) begin
+                // MTC0
+                cp0_wenable <= 1;
+                cp0_widx <= {rd, sel};
+                cp0_wdata <= rt_data;
+            end
+        end
+
         default: invalid <= 1;
     endcase
 end

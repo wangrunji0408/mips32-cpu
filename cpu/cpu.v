@@ -57,6 +57,7 @@ always @ (*) begin
     io_wdata <= 0;
     reg_rd <= 0;
     reg_wdata <= 0;
+    cp0_wenable <= 0;
 
     case(state)
         S_IF: begin
@@ -71,12 +72,18 @@ always @ (*) begin
         S_ID: begin
             // 一般情况，转 EX 阶段
             next_state <= S_EX;
-            // 若写寄存器数据已经准备好（JAL），进入下条指令
+            // 若写寄存器数据已经准备好（JAL, MFC0），进入下条指令
             if(id.rd_ready) begin
                 next_state <= S_IF;
                 next_in_delay_slot <= 0;
                 reg_rd <= id.rd_idx;
                 reg_wdata <= id.rd_data;
+            end
+            // 若写 CP0，进入下条指令
+            if(id.cp0_wenable) begin
+                next_state <= S_IF;
+                next_in_delay_slot <= 0;
+                cp0_wenable <= 1;
             end
             // 若是跳转指令，进入延迟槽指令
             if(id.is_jump) begin
@@ -131,13 +138,25 @@ InstDecode id(
     .rs_idx(regs.rs),
     .rs_data(regs.data1),
     .rt_idx(regs.rt),
-    .rt_data(regs.data2)
+    .rt_data(regs.data2),
+    .cp0_ridx(cp0.ridx),
+    .cp0_rdata(cp0.rdata),
+    .cp0_widx(cp0.widx),
+    .cp0_wdata(cp0.wdata)
 );
 
 ALU alu(
     .a(alu_a),
     .b(alu_b),
     .op(id.alu_op)
+);
+
+reg cp0_wenable;
+
+CP0 cp0(
+    .rst,
+    .clk,
+    .wenable(cp0_wenable)
 );
 
 endmodule
