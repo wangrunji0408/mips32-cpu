@@ -13,9 +13,10 @@ reg[7:0] ram[0: ram_size - 1];
 
 parameter ram_size = 8 * 1024 * 1024;
 parameter bin_file = "program.bin";
-integer i;
+integer fd, len;
 initial begin
-	$readmemh (bin_file, ram);
+	fd = $fopen(bin_file, "rb");
+	len = $fread(ram, fd);
 end
 
 wire[22:0] raddr = addr[22:0];

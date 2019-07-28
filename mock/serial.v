@@ -13,7 +13,7 @@ module MockSerial(
 // 0xc: stat
 
 // 硬编码输入数据
-parameter inputs = {"G", 8'h00, 8'h20, 8'h00, 8'h80, "R"};
+parameter inputs = "";
 integer input_idx = 0;
 wire[7:0] input_data = {
     inputs[$bits(inputs) - 1 - input_idx * 8],

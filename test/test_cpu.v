@@ -28,8 +28,13 @@ end
 CPU cpu(.rst, .clk);
 
 // 模拟设备
-MockRam #(.bin_file("program/monitor.hex")) ram(.clk);
-MockSerial serial(.clk);
+MockRam #(
+	.bin_file("program/monitor.bin")
+) ram(.clk);
+MockSerial #(
+	.inputs({"G", 8'h00, 8'h20, 8'h00, 8'h80, "R"})
+	// .inputs({"D", 8'h00, 8'h20, 8'h00, 8'h80, 8'h10, 8'h0, 8'h0, 8'h0})
+) serial(.clk);
 
 // IO 控制器，连接 CPU 和设备
 IOManager io(
