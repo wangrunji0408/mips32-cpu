@@ -1,11 +1,13 @@
 `include "defs.v"
 
 // 多周期 CPU
+//
+// 基于 ID 模块解码的中间表示
 module CPU (
     input  wire         rst,        // 重置
     input  wire         clk,        // 时钟
 
-                                    // IO 接口
+    // IO 接口
     output reg [3:0]    io_mode,    // IO 类型
     output reg [31:0]   io_addr,    // 地址
     output reg [31:0]   io_wdata,   // 写数据

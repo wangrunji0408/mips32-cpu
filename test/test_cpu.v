@@ -25,7 +25,7 @@ always begin
 end
 
 // CPU
-CPU cpu(.rst, .clk);
+MultiCycleCPU cpu(.rst, .clk);
 
 // 模拟设备
 MockRam #(

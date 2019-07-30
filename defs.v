@@ -49,7 +49,8 @@
 `define ALU_XOR	    3'd3
 `define ALU_SLL	    3'd4
 `define ALU_SRL	    3'd5
-`define ALU_LT	    3'd6
+`define ALU_SUB	    3'd6
+`define ALU_LUI	    3'd7
 
 // IO 类型
 `define IO_NOP 		4'b0000
@@ -61,6 +62,34 @@
 `define IO_SW  		4'b1001
 `define IO_SH  		4'b1010
 `define IO_SB  		4'b1100
+
+// 状态
+`define S_IF    0
+`define S_ID    1
+`define S_EX    2
+`define S_MEM   3
+`define S_WB    4
+
+// 控制信号
+`define ALU_SRC_A_A     0
+`define ALU_SRC_A_PC    1
+`define ALU_SRC_A_SA    2
+
+`define ALU_SRC_B_B     0
+`define ALU_SRC_B_4     1
+`define ALU_SRC_B_IMME  2
+`define ALU_SRC_B_IMMEx4 3
+
+`define PC_SRC_C        0
+`define PC_SRC_ALU      1
+`define PC_SRC_TARGET   2
+
+`define MEM_SRC_PC      0
+`define MEM_SRC_C       1
+
+`define REG_DST_RD      0
+`define REG_DST_RT      1
+`define REG_DST_31      2
 
 // ADDIU    001001ssssstttttiiiiiiiiiiiiiiii
 // ADDU     000000ssssstttttddddd00000100001
