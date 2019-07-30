@@ -23,8 +23,7 @@ module Controller(
     output reg          mem_src,    // 访存数据来源 { 0: PC, 1: C }
 
     // 寄存器堆控制
-    output reg          reg_write,  // 是否写寄存器
-    output reg[1:0]     reg_dst,    // 写寄存器目标 { 0: rd, 1: rt, 2: $31 }
+    output reg[1:0]     reg_dst,    // 写寄存器目标 { 0: $0, 1: rd, 2: rt, 3: $31 }
     output reg          mem_to_reg, // 写寄存器来源 { 0: C, 1: DR }
 
     // ALU 控制
@@ -50,8 +49,7 @@ always @(*) begin
     write_ir <= 0;
     mem_mode <= `IO_NOP;
     mem_src <= `MEM_SRC_PC;
-    reg_write <= 0;
-    reg_dst <= `REG_DST_RD;
+    reg_dst <= `REG_DST_0;
     mem_to_reg <= 0;
     alu_src_a <= `ALU_SRC_A_A;
     alu_src_b <= `ALU_SRC_B_B;
@@ -176,7 +174,6 @@ always @(*) begin
         end
         `S_WB: begin
             next_state <= `S_IF;
-            reg_write <= 1;
             reg_dst <= (opcode == `OP_JAL)? `REG_DST_31: 
                         (opcode == `OP_SPECIAL)? `REG_DST_RD:
                         `REG_DST_RT;

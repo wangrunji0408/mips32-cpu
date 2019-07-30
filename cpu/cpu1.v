@@ -79,7 +79,7 @@ wire[31:0] alu_b =
     (ctrl.alu_src_b == `ALU_SRC_B_IMMEx4)? (imme_ext << 2): 0;
 
 wire[4:0] reg_rd = 
-    ~ctrl.reg_write? 0:
+    (ctrl.reg_dst == `REG_DST_0)? 0:
     (ctrl.reg_dst == `REG_DST_RD)? rd:
     (ctrl.reg_dst == `REG_DST_RT)? rt:
     (ctrl.reg_dst == `REG_DST_31)? 31: 0;

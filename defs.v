@@ -87,9 +87,10 @@
 `define MEM_SRC_PC      0
 `define MEM_SRC_C       1
 
-`define REG_DST_RD      0
-`define REG_DST_RT      1
-`define REG_DST_31      2
+`define REG_DST_0       0
+`define REG_DST_RD      1
+`define REG_DST_RT      2
+`define REG_DST_31      3
 
 // ADDIU    001001ssssstttttiiiiiiiiiiiiiiii
 // ADDU     000000ssssstttttddddd00000100001
