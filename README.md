@@ -43,7 +43,6 @@ which iverilog vvp gtkwave
 
 ```sh
 make build      # 编译
-make hex        # 为测试程序生成 16 进制数据文件
 make test       # 仿真测试
 ```
 
