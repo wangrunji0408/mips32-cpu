@@ -15,7 +15,6 @@ module MultiCycleCPU (
 );
 
 // 中间寄存器
-reg[ 2:0]   state;     // 当前状态
 reg[31:0]   pc;        // 地址
 reg[31:0]   ir;        // 指令
 reg[31:0]   dr;        // 访存数据
@@ -24,7 +23,6 @@ reg[31:0]   a, b, c;   // A, B, C 寄存器
 // 中间寄存器 状态转移
 always @(posedge clk or posedge rst) begin
     if(rst) begin
-        state <= `S_IF;
         pc <= 32'h80000000;
         ir <= 0;
         dr <= 0;
@@ -32,7 +30,6 @@ always @(posedge clk or posedge rst) begin
         b <= 0;
         c <= 0;
     end else begin
-        state <= ctrl.next_state;
         if(ctrl.write_pc)   pc <= next_pc;
         if(ctrl.write_ir)   ir <= io_rdata;
         dr <= io_rdata;
@@ -43,11 +40,13 @@ always @(posedge clk or posedge rst) begin
 end
 
 // 指令解码
+wire[5:0] opcode = ir[31:26];
 wire[25:0] target = ir[25:0];
 wire[4:0] rs = ir[25:21];
 wire[4:0] rt = ir[20:16];
 wire[4:0] rd = ir[15:11];
 wire[5:0] sa = ir[10:6];
+wire[5:0] func = ir[5:0];
 wire[15:0] imme = ir[15:0];
 wire[31:0] imme_s = {{16{imme[15]}}, imme}; // sign extension
 
@@ -58,8 +57,8 @@ wire[31:0] next_pc =
     (ctrl.pc_src == `PC_SRC_TARGET)? {pc[31:28], target, 2'b00}: 0;
 
 assign io_addr =
-    (ctrl.mem_src == `MEM_SRC_PC)? pc:
-    (ctrl.mem_src == `MEM_SRC_C)? c: 0;
+    (ctrl.i_or_d == `MEM_SRC_PC)? pc:
+    (ctrl.i_or_d == `MEM_SRC_C)? c: 0;
 
 assign io_mode = ctrl.mem_mode;
 
@@ -89,8 +88,10 @@ wire[31:0] reg_wdata = ctrl.mem_to_reg? dr: c;
 // 子模块
 
 Controller ctrl(
-    .inst(ir),
-    .state,
+    .rst,
+    .clk,
+    .opcode,
+    .func,
     .alu_zero(alu.out == 0),
     .alu_sign(alu.out[31])
 );

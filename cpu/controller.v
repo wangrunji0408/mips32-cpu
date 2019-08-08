@@ -1,18 +1,17 @@
 `include "defs.v"
 
-// 多周期控制信号生成器
+// 多周期控制器
 //
-// 输入指令和当前状态，输出控制信号
-// 组合逻辑电路
+// 输入指令，输出控制信号
+// 内部是有限状态机
 // 建议配合讲稿数据通路图食用
 module Controller(
-    input  wire[31:0]   inst,       // 指令
-    input  wire[2:0]    state,      // 状态
+    input  wire         rst,        // 重置
+    input  wire         clk,        // 时钟
+    input  wire[5:0]    opcode,     // 指令码
+    input  wire[5:0]    func,       // 功能码
     input  wire         alu_zero,   // ALU 输出是否为0
     input  wire         alu_sign,   // ALU 输出是否为负
-
-    // 状态控制
-    output reg[3:0]     next_state, // 下一周期状态
 
     // 中间寄存器控制
     output reg          write_pc,   // 是否写 PC 寄存器
@@ -20,7 +19,7 @@ module Controller(
 
     // 访存控制
     output reg[3:0]     mem_mode,   // 访存模式
-    output reg          mem_src,    // 访存数据来源 { 0: PC, 1: C }
+    output reg          i_or_d,     // 访存数据来源 { 0: PC, 1: C }
 
     // 寄存器堆控制
     output reg          reg_write,  // 是否写寄存器
@@ -37,11 +36,18 @@ module Controller(
     output reg[1:0]     pc_src      // PC 来源 { 0: C, 1: ALU, 2: {PC[31:28], target << 2} }
 );
 
-wire[5:0] opcode = inst[31:26];
-wire[5:0] func = inst[5:0];
-
 wire is_load  = opcode[5:3] == 3'b100;
 wire is_store = opcode[5:3] == 3'b101;
+
+reg[ 2:0]   state, next_state;     // 状态
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        state <= `S_IF;
+    end else begin
+        state <= next_state;
+    end
+end
 
 always @(*) begin
     // 默认输出，均为0
@@ -49,7 +55,7 @@ always @(*) begin
     write_pc <= 0;
     write_ir <= 0;
     mem_mode <= `IO_NOP;
-    mem_src <= `MEM_SRC_PC;
+    i_or_d <= `MEM_SRC_PC;
     reg_write <= 0;
     reg_dst <= `REG_DST_RD;
     mem_to_reg <= 0;
@@ -64,7 +70,7 @@ always @(*) begin
             next_state <= `S_ID;
             // 访存
             mem_mode <= `IO_LW;
-            mem_src <= `MEM_SRC_PC;
+            i_or_d <= `MEM_SRC_PC;
             write_ir <= 1;
             // ALU：PC + 4
             alu_op <= `ALU_ADD;
@@ -166,7 +172,7 @@ always @(*) begin
         end
         `S_MEM: begin
             next_state <= is_load? `S_WB: `S_IF;
-            mem_src <= `MEM_SRC_C;
+            i_or_d <= `MEM_SRC_C;
             case (opcode)
                 `OP_LB:     mem_mode <= `IO_LB;
                 `OP_LW:     mem_mode <= `IO_LW;
